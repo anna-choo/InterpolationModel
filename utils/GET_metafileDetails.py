@@ -183,13 +183,13 @@ class metafile:
         success_trials = success_trials.reset_index()
         return success_trials
 
-    def gather_metafile(self, subject_list, METAFILES_STORAGE_DIR):
+    def gather_metafile(self, METAFILES_STORAGE_DIR, subject_list):
         '''gather all the metafile details of all subjects'''
         # check is metafile exist
         metafile_found, metafile_notFound = self.check_storage(METAFILES_STORAGE_DIR, subject_list)
         all_metafile_details = None
         for subject in metafile_found:
-            METAFILE_PATH = os.path.join(METAFILES_STORAGE_DIR, subject)
+            METAFILE_PATH = os.path.join(METAFILES_STORAGE_DIR, "meta files - " + str(subject) + ".xlsx")
             metafile_details = self.read(METAFILE_PATH)
             if all_metafile_details is None:
                 all_metafile_details = metafile_details
