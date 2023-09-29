@@ -87,7 +87,6 @@ class metafile:
         return metafile_found, metafile_notFound
 
 
-
     def read(self, METAFILE_PATH,  metafileStandardHeader = "file id"):
         # read metafile
         metafile_details = pd.read_excel(METAFILE_PATH)
@@ -198,6 +197,9 @@ class metafile:
                 all_metafile_details = pd.concat([all_metafile_details, metafile_details], axis = 0)
         
         return all_metafile_details
+
+
+
 
 if __name__ == "__main__":
     METAFILES_STORAGE_DIR = r"Z:\DataCollection\AbilityData\Normative\Processed\MetaFiles"
