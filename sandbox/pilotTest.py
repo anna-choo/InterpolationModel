@@ -188,9 +188,9 @@ class read_c3d_file:
         anatomical_group = self.mapping_color_to_anatomical_group[self.mapping_task_to_color[task]]
 
         # rearrange the markers that are highly correlated together
-        problematic_markers = collections.defaultdict()
+        self.problematic_markers = collections.defaultdict()
         self.transformed_marker_sequence = []
-        transformed_data =  None
+        self.transformed_data =  None
         for group in anatomical_group:
             for marker in self.mapping_anatomical_group_to_marker[group]:
                 
@@ -201,27 +201,37 @@ class read_c3d_file:
                     # check if marker has missing timeframes
                     missing_timeframes = list(self.ranges(np.argwhere(np.isnan(self.coordinates_of_markers[0,idx:idx+1,:]))[:,1]))
                     if len(missing_timeframes) != 0:
-                        problematic_markers[marker] = missing_timeframes
+                        self.problematic_markers[marker] = missing_timeframes
                     
                     # start forming the sequence according to self.mapping_color_to_anatomical_group
-                    if transformed_data is None:
-                        transformed_data = self.coordinates_of_markers[:,idx:idx+1,:]
+                    if self.transformed_data is None:
+                        self.transformed_data = self.coordinates_of_markers[:,idx:idx+1,:]
                     else:
-                        transformed_data = np.concatenate((transformed_data, self.coordinates_of_markers[:,idx:idx+1,:]), axis = 1)
+                        self.transformed_data = np.concatenate((self.transformed_data, self.coordinates_of_markers[:,idx:idx+1,:]), axis = 1)
                     self.transformed_marker_sequence.append(marker)
 
                 else:
                     # find out what are the missing markers, if any
-                    problematic_markers[marker] = "ALL"
+                    self.problematic_markers[marker] = "ALL"
 
-        return transformed_data, self.transformed_marker_sequence, problematic_markers   
+        return self.transformed_data, self.transformed_marker_sequence, self.problematic_markers  
+
+    def exclude_timeframe_with_missing_data(self):
+        self.cropped_transformed_data = None
+        for timeframe in problematic_markers.keys():
+            crop_start = timeframe[0]
+            crop_end = timeframe[1]
+
+            self.cropped_transformed_data = self.transformed_data[:,:,0:crop_start]
+
+
 
 if __name__ == "__main__":
 
     # train_dir = r"C:\Users\anna\Documents\gitHub\NTU\InterpolationModel\data\c3d\train"
     # test_dir = r"C:\Users\anna\Documents\gitHub\NTU\InterpolationModel\data\c3d\test"
 
-    dir = r"C:\Users\anna\Documents\gitHub\NTU\InterpolationModel\data\c3d"
+    dir = r"C:\Users\Administrator\Documents\gitHub\NTU\InterpolationModel\data\train"
     # file = r"C:\Users\Administrator\Documents\gitHub\NTU\InterpolationModel\data\SN268\SN268_0027_10m_05_c3d.c3d"
     METAFILES_STORAGE_DIR = r"Z:\DataCollection\AbilityData\Normative\Processed\MetaFiles"
     subject_list = ["SN196", "SN200", "SN202", "SN268", "SN273", "SN279", "SN281", "SN292", "SN301", "SN328"]
@@ -232,17 +242,21 @@ if __name__ == "__main__":
     # instantiate GET_metafiledetails
     metafile_fn = metafile()
     metadata = metafile_fn.gather_metafile(METAFILES_STORAGE_DIR, subject_list)
+    print(metadata)
     test_task = "10m"
     data = None
     all_problematic_markers = [] 
     for file_name in metadata[metadata["task"] == test_task]["renamed"]:
-        subject = file_name[5]
         file_name = file_name + ".c3d"
-        c3d_path = os.path.join(dir, subject, file_name)
-        temp_data, marker_sequence, problematic_markers = read_c3d_file(c3d_path)
-        if data is None:
-            data = temp_data
-        else:
-            data = pd.concat([data, temp_data], axis = 0)
+        c3d_path = os.path.join(dir, file_name)
+        temp_data, marker_sequence, problematic_markers = read_c3d_file(c3d_path).check_necessary_markers(test_task)
+        if len(problematic_markers) != 0:
+            print(file_name)
+            print(problematic_markers.reverse())
+            # break
+        # if data is None:
+        #     data = temp_data
+        # else:
+        #     data = pd.concat([data, temp_data], axis = 0)
 
 
